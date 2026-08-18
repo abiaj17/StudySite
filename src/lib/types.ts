@@ -45,6 +45,8 @@ export interface StudySession {
   done: boolean;
 }
 
+export type Mode = "dark" | "light";
+
 export interface AppState {
   classes: ClassItem[];
   assignments: Assignment[];
@@ -53,4 +55,5 @@ export interface AppState {
   themeHue: number;
   themeSat: number;
   themeName: string;
+  mode: Mode;
 }

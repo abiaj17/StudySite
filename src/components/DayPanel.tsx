@@ -225,7 +225,7 @@ function ItemRow({ icon, title, meta, notes, done, accent, muted, onToggle, onDe
         style={{
           background: done ? "hsl(var(--accent))" : "transparent",
           border: `1.5px solid ${done ? "hsl(var(--accent))" : "hsl(var(--line))"}`,
-          color: done ? "hsl(var(--hue) 30% 8%)" : "hsl(var(--ink-1))",
+          color: done ? "hsl(var(--on-accent))" : "hsl(var(--ink-1))",
         }}
         title={done ? "Mark undone" : "Mark done"}
       >

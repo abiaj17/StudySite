@@ -176,7 +176,7 @@ export function ListView(p: Props) {
                   style={{
                     background: r.completed ? "hsl(var(--accent))" : "transparent",
                     border: `1.5px solid ${r.completed ? "hsl(var(--accent))" : "hsl(var(--line))"}`,
-                    color: r.completed ? "hsl(var(--hue) 30% 8%)" : "hsl(var(--ink-1))",
+                    color: r.completed ? "hsl(var(--on-accent))" : "hsl(var(--ink-1))",
                   }}
                   title={r.completed ? "Mark undone" : "Mark done"}
                 >

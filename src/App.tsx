@@ -5,7 +5,7 @@ import { UpcomingRail } from "./components/UpcomingRail";
 import { ThemeBar } from "./components/ThemeBar";
 import { ListView } from "./components/ListView";
 import { AssignmentModal, TestModal, ClassesModal } from "./components/Modals";
-import { IconPlus, IconTarget, IconBook } from "./components/icons";
+import { IconPlus, IconTarget, IconBook, IconSun, IconMoon } from "./components/icons";
 import type { AppState, Assignment, ClassItem, TestItem } from "./lib/types";
 import { loadState, saveState, generateStudySessions, makeId, exportState, parseImport } from "./lib/store";
 import { today, toISODate, daysBetween, fromISODate } from "./lib/date";
@@ -33,7 +33,8 @@ export default function App() {
     const root = document.documentElement;
     root.style.setProperty("--hue", String(state.themeHue));
     root.style.setProperty("--sat", `${state.themeSat}%`);
-  }, [state.themeHue, state.themeSat]);
+    root.dataset.mode = state.mode;
+  }, [state.themeHue, state.themeSat, state.mode]);
 
   useEffect(() => { saveState(state); }, [state]);
 
@@ -155,6 +156,9 @@ export default function App() {
   const setTheme = (hue: number, sat: number, name: string) =>
     setState((s) => ({ ...s, themeHue: hue, themeSat: sat, themeName: name }));
 
+  const toggleMode = () =>
+    setState((s) => ({ ...s, mode: s.mode === "dark" ? "light" : "dark" }));
+
   const stats = useMemo(() => {
     const now = today();
     const openA = state.assignments.filter((a) => !a.completed).length;
@@ -245,6 +249,13 @@ export default function App() {
               <IconPlus className="w-4 h-4" /> <span className="hidden sm:inline">Assignment</span>
             </button>
             <div className="w-px h-6 mx-1" style={{ background: "hsl(var(--line))" }} />
+            <button
+              className="btn btn-ghost btn-icon"
+              onClick={toggleMode}
+              title={state.mode === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              {state.mode === "dark" ? <IconSun className="w-4 h-4" /> : <IconMoon className="w-4 h-4" />}
+            </button>
             <ThemeBar
               hue={state.themeHue}
               sat={state.themeSat}

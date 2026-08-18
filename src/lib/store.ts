@@ -59,6 +59,7 @@ function seed(): AppState {
     themeHue: 220,
     themeSat: 55,
     themeName: "Midnight",
+    mode: "dark",
   };
 }
 
@@ -71,6 +72,9 @@ export function loadState(): AppState {
         return {
           ...parsed,
           studySessions: parsed.studySessions ?? [],
+          // Everyone before this field existed was using the app in dark mode
+          // (it was the only mode) — default old saves to "dark", not a guess.
+          mode: parsed.mode === "light" ? "light" : "dark",
         };
       }
     }
@@ -108,6 +112,7 @@ export function parseImport(raw: string): AppState | null {
       themeHue: typeof s.themeHue === "number" ? s.themeHue : 220,
       themeSat: typeof s.themeSat === "number" ? s.themeSat : 55,
       themeName: typeof s.themeName === "string" ? s.themeName : "Midnight",
+      mode: s.mode === "light" ? "light" : "dark",
     };
   } catch {
     return null;

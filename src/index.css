@@ -25,6 +25,14 @@
     --accent: var(--hue) 85% 62%;
     --accent-soft: var(--hue) 60% 40%;
     --accent-glow: var(--hue) 90% 55%;
+    /* Text/icon color for anything sitting on a solid --accent fill (primary
+       buttons, filled checkboxes). Dark mode's accent is bright enough for
+       near-black text; light mode's accent is deeper, so this flips to near-white. */
+    --on-accent: var(--hue) 30% 8%;
+
+    /* Scrim behind modals — a translucent dark wash works over both light and
+       dark content, but light mode wants it lighter so it doesn't go muddy. */
+    --scrim: var(--hue) 40% 4%;
 
     /* shadcn compatibility — mapped to our mono system */
     --background: var(--bg-0);
@@ -34,7 +42,7 @@
     --popover: var(--bg-2);
     --popover-foreground: var(--ink-1);
     --primary: var(--accent);
-    --primary-foreground: var(--hue) 20% 8%;
+    --primary-foreground: var(--on-accent);
     --secondary: var(--bg-2);
     --secondary-foreground: var(--ink-1);
     --muted: var(--bg-1);
@@ -46,6 +54,30 @@
     --input: var(--line-soft);
     --ring: var(--hue) 85% 62%;
     --radius: 0.75rem;
+  }
+
+  /* ---- Light mode ----
+     Same token names, inverted ramps: bg goes near-white to light-gray as
+     surfaces elevate, ink goes near-black, accent deepens so it still reads
+     against white instead of washing out. */
+  :root[data-mode="light"] {
+    --bg-0: var(--hue) calc(var(--sat) * 0.25) 97%;
+    --bg-1: var(--hue) calc(var(--sat) * 0.2) 99%;
+    --bg-2: var(--hue) calc(var(--sat) * 0.3) 93%;
+    --bg-3: var(--hue) calc(var(--sat) * 0.35) 88%;
+    --line: var(--hue) calc(var(--sat) * 0.4) 80%;
+    --line-soft: var(--hue) calc(var(--sat) * 0.3) 87%;
+
+    --ink-1: var(--hue) 30% 14%;
+    --ink-2: var(--hue) 20% 34%;
+    --ink-3: var(--hue) 14% 52%;
+
+    --accent: var(--hue) 80% 46%;
+    --accent-soft: var(--hue) 65% 38%;
+    --accent-glow: var(--hue) 85% 40%;
+    --on-accent: var(--hue) 20% 99%;
+
+    --scrim: var(--hue) 30% 60%;
   }
 }
 
@@ -67,6 +99,16 @@
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     overflow-x: hidden;
     transition: background 700ms ease;
+  }
+  /* Same three-blob layout, recolored — dark 20-25%-lightness blobs read as
+     colored glow on a dark page but as dirty smudges on a white one. Light
+     mode wants pale, high-lightness tints instead. */
+  :root[data-mode="light"] body {
+    background:
+      radial-gradient(1200px 800px at 15% -10%, hsl(var(--hue) 75% 88% / 0.7), transparent 60%),
+      radial-gradient(900px 700px at 110% 10%, hsl(var(--hue) 80% 85% / 0.55), transparent 55%),
+      radial-gradient(1000px 600px at 50% 120%, hsl(var(--hue) 85% 90% / 0.6), transparent 60%),
+      hsl(var(--bg-0));
   }
 }
 
@@ -290,7 +332,7 @@
 
 .btn-primary {
   background: linear-gradient(180deg, hsl(var(--accent)), hsl(var(--accent-soft)));
-  color: hsl(var(--hue) 30% 8%);
+  color: hsl(var(--on-accent));
   box-shadow: 0 8px 24px -10px hsl(var(--accent-glow) / 0.7), inset 0 1px 0 hsl(var(--hue) 90% 80% / 0.35);
 }
 .btn-primary:hover { filter: brightness(1.08); box-shadow: 0 12px 30px -10px hsl(var(--accent-glow) / 0.85), inset 0 1px 0 hsl(var(--hue) 90% 80% / 0.5); }
@@ -361,7 +403,7 @@
 
 .modal-backdrop {
   position: fixed; inset: 0;
-  background: radial-gradient(600px 400px at var(--mx, 50%) var(--my, 50%), hsl(var(--accent) / 0.15), hsl(var(--hue) 40% 4% / 0.85));
+  background: radial-gradient(600px 400px at var(--mx, 50%) var(--my, 50%), hsl(var(--accent) / 0.15), hsl(var(--scrim) / 0.85));
   backdrop-filter: blur(6px);
   z-index: 40;
   animation: float-in 200ms ease both;
