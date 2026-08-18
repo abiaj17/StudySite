@@ -1,6 +1,8 @@
 import type { AppState, StudySession, TestItem } from "./types";
 import { addDays, toISODate, fromISODate, today, daysBetween } from "./date";
 
+// Intentionally left as the old app name — this key is invisible to users, and
+// changing it would silently drop everyone's existing saved data on next load.
 const STORAGE_KEY = "study-orbit-v1";
 
 export const THEMES = [

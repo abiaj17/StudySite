@@ -1,6 +1,8 @@
-# Study Orbit — project brief for Claude
+# Terra — project brief for Claude
 
 Read this first before making changes. It's how I brief a new Claude Code session on this codebase so we don't waste tokens rediscovering the shape.
+
+**Display name is Terra** (renamed from "Study Orbit" — that name was too common). The repo folder, `package.json` script context, Vercel project, and live URL still say `study-orbit`; only user-facing text (title, header, export filenames) changed. Renaming the folder/Vercel project/URL is a separate step nobody's asked for yet.
 
 ## What this is
 
@@ -12,7 +14,7 @@ Live at: **https://study-orbit-zeta.vercel.app** (deployed on Vercel, production
 
 - **React 18 + TypeScript + Vite** — chosen for fast local dev and painless static deploy
 - **Tailwind CSS 3.4** — utility classes, no shadcn/ui components actually used (the init pulled them in, safe to ignore)
-- **No backend.** State persists in `localStorage` under key `study-orbit-v1`. Per-browser only — no cross-device sync yet.
+- **No backend.** State persists in `localStorage` under key `study-orbit-v1` — left unrenamed on purpose, changing it would drop everyone's saved data. Per-browser only — no cross-device sync yet.
 
 ## Source layout
 

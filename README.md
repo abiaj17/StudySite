@@ -1,8 +1,10 @@
-# Study Orbit
+# Terra
 
 Assignment + test tracker for students. Monochromatic monthly calendar with 5 preset themes and a custom color wheel. Auto-schedules study sessions leading up to each test.
 
 Live: **https://study-orbit-zeta.vercel.app**
+
+> App display name is **Terra** as of this rename; the repo folder, Vercel project, and live URL still say `study-orbit` — renaming those is a separate infra step, not done here.
 
 ## Quick start
 

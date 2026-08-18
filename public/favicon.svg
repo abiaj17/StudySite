@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <!-- Study Orbit mark: a body and the path around it. Hue 220 is the default
+  <!-- Terra mark: a body and the path around it. Hue 220 is the default
        "Midnight" theme, hardcoded because a favicon cannot read the app's live
        CSS custom properties. -->
   <defs>

@@ -175,7 +175,7 @@ export default function App() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `study-orbit-${toISODate(today())}.json`;
+    a.download = `terra-${toISODate(today())}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -183,7 +183,7 @@ export default function App() {
   const doImport = async (file: File) => {
     const next = parseImport(await file.text());
     if (!next) {
-      setImportMsg("That file isn't a Study Orbit backup.");
+      setImportMsg("That file isn't a Terra backup.");
       return;
     }
     setState(next);
@@ -211,7 +211,7 @@ export default function App() {
           <div className="flex items-center gap-3">
             <Logo />
             <div className="hidden sm:block">
-              <div className="font-display text-2xl leading-none">Study Orbit</div>
+              <div className="font-display text-2xl leading-none">Terra</div>
               <div className="text-[10px] uppercase tracking-[0.3em]" style={{ color: "hsl(var(--ink-3))" }}>
                 keep your work in gravity
               </div>
@@ -429,7 +429,7 @@ function Logo() {
           boxShadow: "inset 0 0 12px hsl(var(--accent) / 0.3)",
         }}
       >
-        SO
+        T
       </div>
     </div>
   );
