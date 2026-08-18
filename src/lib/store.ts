@@ -1,5 +1,5 @@
-import type { AppState, Assignment, ClassItem, StudySession, TestItem } from "./types";
-import { addDays, toISODate, fromISODate } from "./date";
+import type { AppState, StudySession, TestItem } from "./types";
+import { addDays, toISODate, fromISODate, today, daysBetween } from "./date";
 
 const STORAGE_KEY = "study-orbit-v1";
 
@@ -15,30 +15,36 @@ export function makeId(): string {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
 }
 
-/** Generate spaced study sessions for a test: 7, 5, 3, 1 days before test.
- *  Total minutes = studyHours * 60 split by weights [0.2, 0.25, 0.3, 0.25]. */
-export function generateStudySessions(test: TestItem): StudySession[] {
+/** Generate spaced study sessions for a test at 7, 5, 3, 1 days before.
+ *  Total minutes = studyHours * 60 split by weights [0.15, 0.2, 0.25, 0.4].
+ *
+ *  Slots that would land in the past are dropped and the remaining weights are
+ *  re-normalized, so a test added 3 days out still schedules the full study time
+ *  instead of silently losing it to dates nobody will ever see. */
+export function generateStudySessions(test: TestItem, from: Date = today()): StudySession[] {
   const totalMin = Math.max(30, Math.round(test.studyHours * 60));
   const testDate = fromISODate(test.date);
+  const daysUntil = daysBetween(from, testDate);
+
   const plan: { daysBefore: number; weight: number; focus: string }[] = [
     { daysBefore: 7, weight: 0.15, focus: "Skim notes & mark weak spots" },
     { daysBefore: 5, weight: 0.2,  focus: "Read chapters & summarize" },
     { daysBefore: 3, weight: 0.25, focus: "Practice problems" },
     { daysBefore: 1, weight: 0.4,  focus: "Full review & mock quiz" },
   ];
-  return plan
-    .filter((p) => p.daysBefore >= 1)
-    .map((p) => {
-      const d = addDays(testDate, -p.daysBefore);
-      return {
-        id: makeId(),
-        testId: test.id,
-        date: toISODate(d),
-        minutes: Math.round(totalMin * p.weight),
-        focus: p.focus,
-        done: false,
-      } as StudySession;
-    });
+
+  const usable = plan.filter((p) => p.daysBefore <= daysUntil);
+  if (usable.length === 0) return [];
+  const weightSum = usable.reduce((sum, p) => sum + p.weight, 0);
+
+  return usable.map((p) => ({
+    id: makeId(),
+    testId: test.id,
+    date: toISODate(addDays(testDate, -p.daysBefore)),
+    minutes: Math.round((totalMin * p.weight) / weightSum),
+    focus: p.focus,
+    done: false,
+  } as StudySession));
 }
 
 function seed(): AppState {
@@ -61,8 +67,8 @@ export function loadState(): AppState {
       const parsed = JSON.parse(raw) as AppState;
       if (parsed && parsed.classes && parsed.assignments && parsed.tests) {
         return {
-          studySessions: [],
           ...parsed,
+          studySessions: parsed.studySessions ?? [],
         };
       }
     }
@@ -74,4 +80,34 @@ export function saveState(state: AppState) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   } catch { /* ignore */ }
+}
+
+/* ---- Backup ----------------------------------------------------------
+   localStorage is one browser-clear away from gone. Until accounts land,
+   export/import is the only thing standing between a student and a wiped term. */
+
+export function exportState(state: AppState): string {
+  return JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), state }, null, 2);
+}
+
+/** Parse an exported backup. Returns null if the file isn't one of ours. */
+export function parseImport(raw: string): AppState | null {
+  try {
+    const parsed = JSON.parse(raw);
+    const s = parsed?.state ?? parsed;
+    if (!s || !Array.isArray(s.classes) || !Array.isArray(s.assignments) || !Array.isArray(s.tests)) {
+      return null;
+    }
+    return {
+      classes: s.classes,
+      assignments: s.assignments,
+      tests: s.tests,
+      studySessions: Array.isArray(s.studySessions) ? s.studySessions : [],
+      themeHue: typeof s.themeHue === "number" ? s.themeHue : 220,
+      themeSat: typeof s.themeSat === "number" ? s.themeSat : 55,
+      themeName: typeof s.themeName === "string" ? s.themeName : "Midnight",
+    };
+  } catch {
+    return null;
+  }
 }

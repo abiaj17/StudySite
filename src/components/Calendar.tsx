@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import type { Assignment, ClassItem, StudySession, TestItem } from "../lib/types";
-import { buildMonthGrid, DAY_NAMES_SHORT, MONTH_NAMES, toISODate, today, daysBetween, fromISODate } from "../lib/date";
+import { buildMonthGrid, DAY_NAMES_SHORT, MONTH_NAMES, toISODate, today, daysBetween } from "../lib/date";
 import { IconChevronLeft, IconChevronRight, IconBook, IconFlask, IconTarget } from "./icons";
 
 interface Props {
@@ -108,6 +108,7 @@ export function Calendar(p: Props) {
 
           const totalItems = openAsg.length + tests.length + studies.length;
           const hasHighPriority = openAsg.some((a) => a.priority === "high") || tests.length > 0;
+          const isOverdue = isCurrentMonth && daysAway < 0 && openAsg.length > 0;
           const heatClass =
             !isCurrentMonth ? "" :
             totalItems === 0 ? "" :
@@ -119,7 +120,18 @@ export function Calendar(p: Props) {
             <button
               key={iso}
               onClick={() => p.onSelect(iso)}
-              className={`cell ${isCurrentMonth ? "" : "other-month"} ${isToday ? "today" : ""} ${heatClass} text-left rounded-xl overflow-hidden`}
+              aria-current={isToday ? "date" : undefined}
+              aria-pressed={isSelected}
+              aria-label={[
+                `${MONTH_NAMES[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`,
+                isToday ? "today" : null,
+                tests.length ? `${tests.length} test${tests.length > 1 ? "s" : ""}` : null,
+                openAsg.length ? `${openAsg.length} assignment${openAsg.length > 1 ? "s" : ""} due` : null,
+                studies.length ? `${studies.length} study session${studies.length > 1 ? "s" : ""}` : null,
+                isOverdue ? "overdue" : null,
+                totalItems === 0 ? "nothing scheduled" : null,
+              ].filter(Boolean).join(", ")}
+              className={`cell ${isCurrentMonth ? "" : "other-month"} ${isToday ? "today" : ""} ${isOverdue ? "overdue" : ""} ${heatClass} text-left rounded-xl overflow-hidden`}
               style={{
                 background: isSelected
                   ? "hsl(var(--bg-3))"

@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import type { Assignment, ClassItem, Priority, TestItem } from "../lib/types";
 import { IconClose, IconPlus, IconTrash } from "./icons";
+import { ClassPicker } from "./ClassPicker";
+import { SUBJECT_TINT } from "../lib/apClasses";
 
 /* ------------------------------------------------------------------ */
 /* Modal shell                                                          */
 /* ------------------------------------------------------------------ */
-function Modal({ children, onClose, title }: { children: React.ReactNode; onClose: () => void; title: string }) {
+function Modal({ children, onClose, title, wide }: { children: React.ReactNode; onClose: () => void; title: string; wide?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -19,7 +21,7 @@ function Modal({ children, onClose, title }: { children: React.ReactNode; onClos
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
         <div
           ref={ref}
-          className="glass rounded-2xl w-full max-w-lg animate-float-in pointer-events-auto glow-accent overflow-hidden"
+          className={`glass rounded-2xl w-full ${wide ? "max-w-3xl" : "max-w-lg"} animate-float-in pointer-events-auto glow-accent overflow-hidden`}
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: "hsl(var(--line))" }}>
@@ -280,6 +282,8 @@ export function ClassesModal({
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [tint, setTint] = useState(0);
+  // Deleting a class takes its assignments and tests with it — make the user say it twice.
+  const [confirmId, setConfirmId] = useState<string | null>(null);
 
   const submit = () => {
     if (!name.trim() || !code.trim()) return;
@@ -288,7 +292,7 @@ export function ClassesModal({
   };
 
   return (
-    <Modal title="Your classes" onClose={onClose}>
+    <Modal title="Your classes" onClose={onClose} wide>
       <div className="space-y-2 mb-5">
         {classes.length === 0 && (
           <div className="text-sm" style={{ color: "hsl(var(--ink-3))" }}>No classes yet — add one below.</div>
@@ -303,20 +307,58 @@ export function ClassesModal({
               <div className="font-semibold text-sm">{c.code}</div>
               <div className="text-xs truncate" style={{ color: "hsl(var(--ink-3))" }}>{c.name}</div>
             </div>
-            <button
-              onClick={() => onDelete(c.id)}
-              className="btn btn-ghost btn-icon opacity-0 group-hover:opacity-100"
-              style={{ width: 30, height: 30 }}
-              title="Delete class (and its items)"
-            >
-              <IconTrash className="w-3.5 h-3.5" />
-            </button>
+            {confirmId === c.id ? (
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span className="text-[11px]" style={{ color: "hsl(var(--ink-3))" }}>
+                  Delete + all its work?
+                </span>
+                <button
+                  onClick={() => { onDelete(c.id); setConfirmId(null); }}
+                  className="btn"
+                  style={{
+                    padding: "5px 10px", fontSize: 12,
+                    background: "hsl(var(--accent) / 0.15)",
+                    border: "1px solid hsl(var(--accent))",
+                    color: "hsl(var(--accent))",
+                  }}
+                >
+                  Yes
+                </button>
+                <button
+                  onClick={() => setConfirmId(null)}
+                  className="btn btn-ghost"
+                  style={{ padding: "5px 10px", fontSize: 12 }}
+                >
+                  No
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setConfirmId(c.id)}
+                className="btn btn-ghost btn-icon opacity-0 group-hover:opacity-100 focus:opacity-100"
+                style={{ width: 30, height: 30 }}
+                title="Delete class (and its items)"
+              >
+                <IconTrash className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
         ))}
       </div>
 
+      <div className="border-t pt-4 mb-5" style={{ borderColor: "hsl(var(--line))" }}>
+        <ClassPicker
+          existing={classes}
+          onAdd={(preset) => onSave({
+            code: preset.code,
+            name: preset.name,
+            tint: SUBJECT_TINT[preset.subject],
+          })}
+        />
+      </div>
+
       <div className="border-t pt-4" style={{ borderColor: "hsl(var(--line))" }}>
-        <div className="text-[10px] uppercase tracking-[0.3em] mb-2" style={{ color: "hsl(var(--ink-3))" }}>Add class</div>
+        <div className="text-[10px] uppercase tracking-[0.3em] mb-2" style={{ color: "hsl(var(--ink-3))" }}>Or add your own</div>
         <div className="grid grid-cols-3 gap-2 mb-3">
           <input className="field" placeholder="Code (CHEM 121)" value={code} onChange={(e) => setCode(e.target.value)} />
           <input className="field col-span-2" placeholder="Name (Organic Chemistry)" value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") submit(); }} />

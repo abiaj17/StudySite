@@ -1,6 +1,6 @@
 import type { Assignment, ClassItem, StudySession, TestItem } from "../lib/types";
 import { today, daysBetween, fromISODate, friendlyDelta, formatShortDate } from "../lib/date";
-import { IconFire, IconTarget, IconSpark, IconBook, IconClock } from "./icons";
+import { IconFire, IconTarget, IconSpark, IconBook, IconClock, IconCheck } from "./icons";
 
 interface Props {
   classes: ClassItem[];
@@ -8,6 +8,7 @@ interface Props {
   tests: TestItem[];
   studySessions: StudySession[];
   onJump: (iso: string) => void;
+  onToggleAsg: (id: string) => void;
 }
 
 export function UpcomingRail(p: Props) {
@@ -18,6 +19,13 @@ export function UpcomingRail(p: Props) {
   // Study today
   const studyToday = p.studySessions.filter((s) => s.date === todayISO && !s.done);
   const asgToday = p.assignments.filter((a) => a.dueDate === todayISO && !a.completed);
+
+  // Overdue — open work whose due date already passed. Nothing else in the rail matters more.
+  const overdue = p.assignments
+    .filter((a) => !a.completed)
+    .map((a) => ({ a, d: daysBetween(now, fromISODate(a.dueDate)) }))
+    .filter(({ d }) => d < 0)
+    .sort((x, y) => x.d - y.d);
 
   // Upcoming assignments (next 14 days, open only)
   const upcomingAsg = p.assignments
@@ -48,6 +56,55 @@ export function UpcomingRail(p: Props) {
 
   return (
     <div className="space-y-4">
+      {/* Overdue — only rendered when there is something to answer for */}
+      {overdue.length > 0 && (
+        <div className="rounded-2xl p-4 animate-float-in late-panel">
+          <div className="flex items-center justify-between mb-3">
+            <div className="text-[10px] uppercase tracking-[0.3em]" style={{ color: "hsl(var(--accent))" }}>
+              Overdue
+            </div>
+            <div className="text-xs font-semibold" style={{ color: "hsl(var(--accent))" }}>
+              {overdue.length} late
+            </div>
+          </div>
+          <div className="space-y-2">
+            {overdue.slice(0, 5).map(({ a, d }) => {
+              const cls = classById[a.classId];
+              return (
+                <div
+                  key={a.id}
+                  className="flex items-center gap-2.5 rounded-xl p-3"
+                  style={{ background: "hsl(var(--bg-2))", border: "1px dashed hsl(var(--accent) / 0.55)" }}
+                >
+                  <button
+                    onClick={() => p.onToggleAsg(a.id)}
+                    className="w-5 h-5 rounded-md flex items-center justify-center shrink-0"
+                    style={{ border: "1.5px solid hsl(var(--accent))", color: "hsl(var(--accent))" }}
+                    title="Mark done"
+                  >
+                    <IconCheck className="w-3 h-3 opacity-0 hover:opacity-100" />
+                  </button>
+                  <button onClick={() => p.onJump(a.dueDate)} className="flex-1 min-w-0 text-left">
+                    <div className="text-sm font-semibold truncate">{a.title}</div>
+                    <div className="text-[11px] truncate" style={{ color: "hsl(var(--ink-3))" }}>
+                      {cls?.code ?? "—"} · was due {formatShortDate(a.dueDate)}
+                    </div>
+                  </button>
+                  <div className="font-display text-lg shrink-0" style={{ color: "hsl(var(--accent))" }}>
+                    {-d}<span className="text-[10px]" style={{ color: "hsl(var(--ink-3))" }}>d</span>
+                  </div>
+                </div>
+              );
+            })}
+            {overdue.length > 5 && (
+              <div className="text-[11px] pt-0.5" style={{ color: "hsl(var(--ink-3))" }}>
+                +{overdue.length - 5} more overdue
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Weekly progress meter */}
       <div className="glass rounded-2xl p-4 animate-float-in">
         <div className="flex items-center justify-between mb-3">

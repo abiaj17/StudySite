@@ -1,6 +1,6 @@
 import type { Assignment, ClassItem, StudySession, TestItem } from "../lib/types";
 import { fromISODate, DAY_NAMES_LONG, MONTH_NAMES, daysBetween, today, friendlyDelta } from "../lib/date";
-import { IconCheck, IconTrash, IconClock, IconTarget, IconBook, IconPlus, IconClose } from "./icons";
+import { IconCheck, IconTrash, IconClock, IconTarget, IconBook, IconPlus, IconClose, IconPen } from "./icons";
 
 interface Props {
   iso: string;
@@ -10,8 +10,10 @@ interface Props {
   studySessions: StudySession[];
   onToggleAsg: (id: string) => void;
   onDeleteAsg: (id: string) => void;
+  onEditAsg: (a: Assignment) => void;
   onToggleTest: (id: string) => void;
   onDeleteTest: (id: string) => void;
+  onEditTest: (t: TestItem) => void;
   onToggleStudy: (id: string) => void;
   onAddAssignment: () => void;
   onAddTest: () => void;
@@ -88,6 +90,7 @@ export function DayPanel(p: Props) {
                 done={t.completed}
                 onToggle={() => p.onToggleTest(t.id)}
                 onDelete={() => p.onDeleteTest(t.id)}
+                onEdit={() => p.onEditTest(t)}
                 icon={<IconTarget className="w-4 h-4" />}
                 title={t.title}
                 meta={
@@ -115,6 +118,7 @@ export function DayPanel(p: Props) {
                 done={a.completed}
                 onToggle={() => p.onToggleAsg(a.id)}
                 onDelete={() => p.onDeleteAsg(a.id)}
+                onEdit={() => p.onEditAsg(a)}
                 icon={
                   <span
                     className="w-2.5 h-2.5 rounded-full"
@@ -130,6 +134,9 @@ export function DayPanel(p: Props) {
                     <span className="chip">{cls?.code ?? "—"}</span>
                     <span className="chip"><IconClock className="w-3 h-3" /> {a.estMinutes} min</span>
                     <PriorityChip priority={a.priority} />
+                    {daysAway < 0 && !a.completed && (
+                      <span className="chip chip-late">{-daysAway}d late</span>
+                    )}
                   </>
                 }
                 notes={a.notes}
@@ -199,9 +206,10 @@ interface ItemRowProps {
   muted?: boolean;
   onToggle: () => void;
   onDelete?: () => void;
+  onEdit?: () => void;
 }
 
-function ItemRow({ icon, title, meta, notes, done, accent, muted, onToggle, onDelete }: ItemRowProps) {
+function ItemRow({ icon, title, meta, notes, done, accent, muted, onToggle, onDelete, onEdit }: ItemRowProps) {
   return (
     <div
       className="group flex items-start gap-3 rounded-xl p-3 transition-all"
@@ -233,16 +241,28 @@ function ItemRow({ icon, title, meta, notes, done, accent, muted, onToggle, onDe
         {meta && <div className="flex flex-wrap gap-1.5 mt-2">{meta}</div>}
         {notes && <div className="text-xs mt-2" style={{ color: "hsl(var(--ink-3))" }}>{notes}</div>}
       </div>
-      {onDelete && (
-        <button
-          onClick={onDelete}
-          className="btn btn-ghost btn-icon opacity-0 group-hover:opacity-100 transition-opacity"
-          style={{ width: 30, height: 30 }}
-          title="Delete"
-        >
-          <IconTrash className="w-3.5 h-3.5" />
-        </button>
-      )}
+      <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+        {onEdit && (
+          <button
+            onClick={onEdit}
+            className="btn btn-ghost btn-icon"
+            style={{ width: 30, height: 30 }}
+            title="Edit"
+          >
+            <IconPen className="w-3.5 h-3.5" />
+          </button>
+        )}
+        {onDelete && (
+          <button
+            onClick={onDelete}
+            className="btn btn-ghost btn-icon"
+            style={{ width: 30, height: 30 }}
+            title="Delete"
+          >
+            <IconTrash className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
     </div>
   );
 }

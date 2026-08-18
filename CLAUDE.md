@@ -25,12 +25,16 @@ src/
     types.ts                 ← ClassItem, Assignment, TestItem, StudySession, AppState
     date.ts                  ← ISO date helpers, buildMonthGrid, friendlyDelta
     store.ts                 ← loadState/saveState/seed + generateStudySessions + THEMES
+                               + exportState/parseImport (JSON backup)
+    apClasses.ts             ← Leander ISD AP catalog presets + 4 grouping modes
   components/
     Calendar.tsx             ← monthly grid, day cells, urgency "heat" glow
     DayPanel.tsx             ← selected-day detail (right rail / mobile stack)
-    UpcomingRail.tsx         ← weekly progress, Focus Today, next 14 days
+    UpcomingRail.tsx         ← overdue, weekly progress, Focus Today, next 14 days
+    ListView.tsx             ← flat searchable list of all work (the "List" tab)
     ThemeBar.tsx             ← 5 preset hue pills + custom color-wheel picker
     Modals.tsx               ← Add/edit assignment, test, classes
+    ClassPicker.tsx          ← AP catalog picker inside the classes modal
     icons.tsx                ← inline SVG icon set (no icon library)
 ```
 
@@ -46,13 +50,21 @@ Everything in the UI is derived from **two CSS custom properties**: `--hue` (0�
 
 `generateStudySessions(test)` in `store.ts`. For each test, it schedules sessions at **7, 5, 3, 1 days before**, split by weights `[0.15, 0.2, 0.25, 0.4]` of `test.studyHours * 60` minutes. Naive but feels smart. If you rewrite this into real spaced repetition, add topic-mastery ratings to `TestItem` first.
 
+Slots that would land **in the past are dropped**, and the remaining weights are re-normalized so the student still gets the full `studyHours` they asked for. Known trade-off: a test added 2 days out puts every minute into a single session. Load-spreading across days (and across other tests in the same week) is the next real improvement here.
+
+Editing a test regenerates its sessions, but `upsertTest` in `App.tsx` carries `done` across by matching on `focus` — otherwise fixing a typo would reset every checkbox.
+
 ## Fake data policy
 
 `seed()` returns empty arrays. **Do not re-introduce demo data.** Owner explicitly wants a clean slate.
 
 ## Font
 
-Ranchers (Google Fonts) for display type — big month name, day numbers, dashboard tiles. Loaded via `<link>` in `index.html`. Ranchers has descenders, so display headings need `line-height: 1.15` and a hair of `padding-bottom` or the "g" in August gets clipped. Learn from my mistake.
+**Inter everywhere**, body and display both. Loaded via `@import` in `index.html` at weights 400–900.
+
+`.font-display` is Inter at `font-weight: 900` / `letter-spacing: -0.03em`. Large Inter needs the negative tracking and the heavy weight or it just reads as body text scaled up.
+
+Previously this was Ranchers, which had a descender-clipping problem that forced `line-height: 1.15` and `padding-bottom` on display headings. Inter doesn't have that issue — those rules are still in `Calendar.tsx` and `ListView.tsx` but are no longer load-bearing.
 
 ## Deploy
 
