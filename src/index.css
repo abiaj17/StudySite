@@ -1,0 +1,270 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------- Monochromatic theming engine ----------
+   Everything derives from --hue and --sat. Swap those two and the whole app retints.
+*/
+@layer base {
+  :root {
+    --hue: 220;
+    --sat: 45%;
+
+    /* Derived shades — all monochromatic tints of --hue */
+    --bg-0: var(--hue) calc(var(--sat) * 0.35) 4%;
+    --bg-1: var(--hue) calc(var(--sat) * 0.4) 7%;
+    --bg-2: var(--hue) calc(var(--sat) * 0.5) 11%;
+    --bg-3: var(--hue) calc(var(--sat) * 0.6) 16%;
+    --line: var(--hue) calc(var(--sat) * 0.6) 22%;
+    --line-soft: var(--hue) calc(var(--sat) * 0.5) 14%;
+
+    --ink-1: var(--hue) 20% 96%;
+    --ink-2: var(--hue) 15% 72%;
+    --ink-3: var(--hue) 12% 48%;
+
+    --accent: var(--hue) 85% 62%;
+    --accent-soft: var(--hue) 60% 40%;
+    --accent-glow: var(--hue) 90% 55%;
+
+    /* shadcn compatibility — mapped to our mono system */
+    --background: var(--bg-0);
+    --foreground: var(--ink-1);
+    --card: var(--bg-1);
+    --card-foreground: var(--ink-1);
+    --popover: var(--bg-2);
+    --popover-foreground: var(--ink-1);
+    --primary: var(--accent);
+    --primary-foreground: var(--hue) 20% 8%;
+    --secondary: var(--bg-2);
+    --secondary-foreground: var(--ink-1);
+    --muted: var(--bg-1);
+    --muted-foreground: var(--ink-3);
+    --accent-foreground: var(--ink-1);
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 0 0% 98%;
+    --border: var(--line);
+    --input: var(--line-soft);
+    --ring: var(--hue) 85% 62%;
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html, body, #root {
+    height: 100%;
+    min-height: 100vh;
+  }
+  body {
+    background:
+      radial-gradient(1200px 800px at 15% -10%, hsl(var(--hue) 80% 20% / 0.35), transparent 60%),
+      radial-gradient(900px 700px at 110% 10%, hsl(var(--hue) 85% 25% / 0.28), transparent 55%),
+      radial-gradient(1000px 600px at 50% 120%, hsl(var(--hue) 90% 22% / 0.28), transparent 60%),
+      hsl(var(--bg-0));
+    color: hsl(var(--ink-1));
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    overflow-x: hidden;
+    transition: background 700ms ease;
+  }
+}
+
+.font-display {
+  font-family: 'Ranchers', 'Rancho', system-ui, cursive;
+  letter-spacing: 0.02em;
+}
+
+.glass {
+  background: linear-gradient(180deg, hsl(var(--bg-1) / 0.85), hsl(var(--bg-1) / 0.55));
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border: 1px solid hsl(var(--line) / 0.7);
+}
+
+.glow-accent {
+  box-shadow:
+    0 0 0 1px hsl(var(--accent) / 0.35),
+    0 10px 40px -10px hsl(var(--accent-glow) / 0.5),
+    0 0 60px -20px hsl(var(--accent-glow) / 0.35);
+}
+
+.text-gradient {
+  background: linear-gradient(
+    135deg,
+    hsl(var(--ink-1)) 0%,
+    hsl(var(--accent)) 60%,
+    hsl(var(--accent-glow)) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+@keyframes float-in {
+  0% { opacity: 0; transform: translateY(12px) scale(0.98); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-float-in { animation: float-in 500ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+@keyframes month-swap-in {
+  0% { opacity: 0; transform: translateY(8px); filter: blur(6px); }
+  100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+.animate-month-in { animation: month-swap-in 450ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 hsl(var(--accent) / 0.55); }
+  50% { box-shadow: 0 0 0 8px hsl(var(--accent) / 0); }
+}
+.animate-pulse-glow { animation: pulse-glow 2.4s ease-in-out infinite; }
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg,
+    transparent 0%,
+    hsl(var(--accent) / 0.15) 50%,
+    transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 3s linear infinite;
+}
+
+@keyframes tick-in {
+  0% { transform: scale(0) rotate(-30deg); opacity: 0; }
+  60% { transform: scale(1.2) rotate(5deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+.animate-tick { animation: tick-in 400ms cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+@keyframes spin-slow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.animate-spin-slow { animation: spin-slow 30s linear infinite; }
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.03); opacity: 1; }
+}
+.animate-breathe { animation: breathe 4s ease-in-out infinite; }
+
+.cell {
+  position: relative;
+  transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+              background 220ms ease,
+              border-color 220ms ease,
+              box-shadow 220ms ease;
+}
+.cell:hover {
+  transform: translateY(-2px);
+  background: hsl(var(--bg-3));
+  border-color: hsl(var(--accent) / 0.55);
+  box-shadow:
+    0 6px 24px -8px hsl(var(--accent-glow) / 0.45),
+    inset 0 0 0 1px hsl(var(--accent) / 0.25);
+  z-index: 5;
+}
+.cell.today {
+  border-color: hsl(var(--accent) / 0.7);
+  box-shadow: inset 0 0 0 1px hsl(var(--accent) / 0.35);
+}
+.cell.other-month {
+  opacity: 0.35;
+}
+
+.heat-1 { box-shadow: inset 0 0 30px -8px hsl(var(--accent) / 0.15); }
+.heat-2 { box-shadow: inset 0 0 30px -6px hsl(var(--accent) / 0.28); }
+.heat-3 {
+  box-shadow: inset 0 0 40px -4px hsl(var(--accent) / 0.45);
+  animation: pulse-glow 2.2s ease-in-out infinite;
+}
+
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: hsl(var(--line));
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover { background: hsl(var(--accent) / 0.6); background-clip: padding-box; border: 2px solid transparent; }
+
+.field {
+  background: hsl(var(--bg-2));
+  border: 1px solid hsl(var(--line));
+  color: hsl(var(--ink-1));
+  border-radius: 10px;
+  padding: 10px 12px;
+  outline: none;
+  transition: border-color 180ms, box-shadow 180ms, background 180ms;
+  width: 100%;
+  font-size: 14px;
+}
+.field:focus {
+  border-color: hsl(var(--accent) / 0.7);
+  box-shadow: 0 0 0 3px hsl(var(--accent) / 0.18);
+  background: hsl(var(--bg-3));
+}
+.field::placeholder { color: hsl(var(--ink-3)); }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 600;
+  border-radius: 10px;
+  padding: 10px 14px;
+  transition: transform 160ms, background 160ms, box-shadow 160ms, border-color 160ms, filter 160ms;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-size: 14px;
+  user-select: none;
+}
+.btn:active { transform: translateY(1px) scale(0.98); }
+
+.btn-primary {
+  background: linear-gradient(180deg, hsl(var(--accent)), hsl(var(--accent-soft)));
+  color: hsl(var(--hue) 30% 8%);
+  box-shadow: 0 8px 24px -10px hsl(var(--accent-glow) / 0.7), inset 0 1px 0 hsl(var(--hue) 90% 80% / 0.35);
+}
+.btn-primary:hover { filter: brightness(1.08); box-shadow: 0 12px 30px -10px hsl(var(--accent-glow) / 0.85), inset 0 1px 0 hsl(var(--hue) 90% 80% / 0.5); }
+
+.btn-ghost {
+  background: hsl(var(--bg-2));
+  color: hsl(var(--ink-1));
+  border-color: hsl(var(--line));
+}
+.btn-ghost:hover { background: hsl(var(--bg-3)); border-color: hsl(var(--accent) / 0.5); }
+
+.btn-icon {
+  width: 38px; height: 38px; padding: 0; border-radius: 10px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: hsl(var(--bg-3));
+  border: 1px solid hsl(var(--line));
+  color: hsl(var(--ink-2));
+  letter-spacing: 0.02em;
+}
+
+::selection { background: hsl(var(--accent) / 0.4); color: hsl(var(--ink-1)); }
+
+.modal-backdrop {
+  position: fixed; inset: 0;
+  background: radial-gradient(600px 400px at var(--mx, 50%) var(--my, 50%), hsl(var(--accent) / 0.15), hsl(var(--hue) 40% 4% / 0.85));
+  backdrop-filter: blur(6px);
+  z-index: 40;
+  animation: float-in 200ms ease both;
+}
