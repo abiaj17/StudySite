@@ -50,6 +50,14 @@ export function buildMonthGrid(year: number, month: number): Date[] {
   return cells;
 }
 
+/** Build a 7-cell grid (Sunday–Saturday) for the week containing the given date. */
+export function buildWeekGrid(anchor: Date): Date[] {
+  const start = addDays(anchor, -anchor.getDay());
+  const cells: Date[] = [];
+  for (let i = 0; i < 7; i++) cells.push(addDays(start, i));
+  return cells;
+}
+
 export function friendlyDelta(daysAway: number): string {
   if (daysAway === 0) return "today";
   if (daysAway === 1) return "tomorrow";

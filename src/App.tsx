@@ -8,7 +8,8 @@ import { AssignmentModal, TestModal, ClassesModal } from "./components/Modals";
 import { IconPlus, IconTarget, IconBook, IconSun, IconMoon } from "./components/icons";
 import type { AppState, Assignment, ClassItem, TestItem } from "./lib/types";
 import { loadState, saveState, generateStudySessions, makeId, exportState, parseImport } from "./lib/store";
-import { today, toISODate, daysBetween, fromISODate } from "./lib/date";
+import { today, toISODate, daysBetween, fromISODate, addDays } from "./lib/date";
+import type { CalScale } from "./components/Calendar";
 
 type ModalKind =
   | null
@@ -26,6 +27,7 @@ export default function App() {
   const [selectedISO, setSelectedISO] = useState<string | null>(() => toISODate(today()));
   const [modal, setModal] = useState<ModalKind>(null);
   const [view, setView] = useState<"calendar" | "list">("calendar");
+  const [scale, setScale] = useState<CalScale>("month");
   const [importMsg, setImportMsg] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -64,6 +66,11 @@ export default function App() {
     setSelectedISO(iso);
     setView("calendar");
   };
+
+  // Week nav shifts the same anchor jumpToDate already understands (it syncs
+  // the month cursor too, so switching back to Month scale lands on the right page).
+  const prevWeek = () => jumpToDate(toISODate(addDays(fromISODate(selectedISO ?? toISODate(today())), -7)));
+  const nextWeek = () => jumpToDate(toISODate(addDays(fromISODate(selectedISO ?? toISODate(today())), 7)));
 
   const upsertAssignment = (payload: Omit<Assignment, "id" | "createdAt"> & { id?: string }) => {
     setState((s) => {
@@ -236,6 +243,22 @@ export default function App() {
                 List
               </button>
             </div>
+            {view === "calendar" && (
+              <div className="seg" title="Zoom the calendar in to a week or out to a month">
+                <button
+                  className={`seg-btn ${scale === "month" ? "is-active" : ""}`}
+                  onClick={() => setScale("month")}
+                >
+                  Month
+                </button>
+                <button
+                  className={`seg-btn ${scale === "week" ? "is-active" : ""}`}
+                  onClick={() => setScale("week")}
+                >
+                  Week
+                </button>
+              </div>
+            )}
             <button className="btn btn-ghost" onClick={() => setModal({ kind: "classes" })}>
               <IconBook className="w-4 h-4" /> Classes
             </button>
@@ -299,14 +322,15 @@ export default function App() {
             <Calendar
               year={cursor.year}
               month={cursor.month}
+              scale={scale}
               classes={state.classes}
               assignments={state.assignments}
               tests={state.tests}
               studySessions={state.studySessions}
               selectedISO={selectedISO}
               onSelect={setSelectedISO}
-              onPrev={prevMonth}
-              onNext={nextMonth}
+              onPrev={scale === "week" ? prevWeek : prevMonth}
+              onNext={scale === "week" ? nextWeek : nextMonth}
               onToday={gotoToday}
               monthKey={monthKey}
             />

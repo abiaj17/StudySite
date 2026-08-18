@@ -1,11 +1,14 @@
 import { useMemo } from "react";
 import type { Assignment, ClassItem, StudySession, TestItem } from "../lib/types";
-import { buildMonthGrid, DAY_NAMES_SHORT, MONTH_NAMES, toISODate, today, daysBetween } from "../lib/date";
+import { buildMonthGrid, buildWeekGrid, DAY_NAMES_SHORT, MONTH_NAMES, toISODate, today, daysBetween, fromISODate } from "../lib/date";
 import { IconChevronLeft, IconChevronRight, IconBook, IconFlask, IconTarget } from "./icons";
+
+export type CalScale = "month" | "week";
 
 interface Props {
   year: number;
   month: number; // 0-11
+  scale: CalScale;
   classes: ClassItem[];
   assignments: Assignment[];
   tests: TestItem[];
@@ -19,7 +22,13 @@ interface Props {
 }
 
 export function Calendar(p: Props) {
-  const grid = useMemo(() => buildMonthGrid(p.year, p.month), [p.year, p.month]);
+  const isWeek = p.scale === "week";
+  const grid = useMemo(
+    () => isWeek
+      ? buildWeekGrid(fromISODate(p.selectedISO ?? toISODate(today())))
+      : buildMonthGrid(p.year, p.month),
+    [isWeek, p.selectedISO, p.year, p.month],
+  );
   const todayISO = toISODate(today());
   const classById = useMemo(() => Object.fromEntries(p.classes.map((c) => [c.id, c])), [p.classes]);
 
@@ -38,23 +47,33 @@ export function Calendar(p: Props) {
     return map;
   }, [p.assignments, p.tests, p.studySessions]);
 
-  const monthName = MONTH_NAMES[p.month];
+  // Week scale can straddle a month (or, rarely, a year) boundary, so the big
+  // display text becomes a date range instead of a bare month name.
+  const headline = isWeek
+    ? (() => {
+        const first = grid[0], last = grid[6];
+        const fm = MONTH_NAMES[first.getMonth()].slice(0, 3);
+        const lm = MONTH_NAMES[last.getMonth()].slice(0, 3);
+        return fm === lm ? `${fm} ${first.getDate()}–${last.getDate()}` : `${fm} ${first.getDate()} – ${lm} ${last.getDate()}`;
+      })()
+    : MONTH_NAMES[p.month];
+  const headlineYear = isWeek ? grid[6].getFullYear() : p.year;
 
   return (
     <div className="w-full">
-      {/* Header — huge month name */}
+      {/* Header — huge month name, or a date range when zoomed to a week */}
       <div className="flex items-end justify-between gap-4 mb-6 px-1">
         <div key={p.monthKey} className="animate-month-in min-w-0">
           <div className="flex items-baseline gap-4 flex-wrap">
             <h1
               className="font-display text-gradient"
-              style={{ fontSize: "clamp(48px, 7.5vw, 104px)", lineHeight: 1.15, paddingBottom: "0.05em" }}
+              style={{ fontSize: isWeek ? "clamp(32px, 5vw, 64px)" : "clamp(48px, 7.5vw, 104px)", lineHeight: 1.15, paddingBottom: "0.05em" }}
             >
-              {monthName}
+              {headline}
             </h1>
             <div className="flex flex-col">
               <span className="font-display" style={{ fontSize: "clamp(24px, 2.5vw, 40px)", lineHeight: 1.15, color: "hsl(var(--ink-2))" }}>
-                {p.year}
+                {headlineYear}
               </span>
               <span className="text-[11px] uppercase tracking-[0.3em] mt-1" style={{ color: "hsl(var(--ink-3))" }}>
                 {(() => {
@@ -68,11 +87,11 @@ export function Calendar(p: Props) {
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          <button className="btn btn-ghost btn-icon" onClick={p.onPrev} title="Previous month">
+          <button className="btn btn-ghost btn-icon" onClick={p.onPrev} title={isWeek ? "Previous week" : "Previous month"}>
             <IconChevronLeft className="w-4 h-4" />
           </button>
           <button className="btn btn-ghost" onClick={p.onToday}>Today</button>
-          <button className="btn btn-ghost btn-icon" onClick={p.onNext} title="Next month">
+          <button className="btn btn-ghost btn-icon" onClick={p.onNext} title={isWeek ? "Next week" : "Next month"}>
             <IconChevronRight className="w-4 h-4" />
           </button>
         </div>
@@ -95,7 +114,8 @@ export function Calendar(p: Props) {
       <div key={p.monthKey + "-g"} className="grid grid-cols-7 gap-2 animate-month-in">
         {grid.map((date, idx) => {
           const iso = toISODate(date);
-          const isCurrentMonth = date.getMonth() === p.month;
+          // Week scale has no "other month" concept — every visible day counts.
+          const isCurrentMonth = isWeek || date.getMonth() === p.month;
           const isToday = iso === todayISO;
           const isSelected = iso === p.selectedISO;
           const bucket = byDay[iso];
@@ -137,7 +157,7 @@ export function Calendar(p: Props) {
                   ? "hsl(var(--bg-3))"
                   : "hsl(var(--bg-1))",
                 border: "1px solid hsl(var(--line))",
-                minHeight: 96,
+                minHeight: isWeek ? 220 : 96,
                 padding: "8px 10px",
                 animationDelay: `${Math.min(400, idx * 8)}ms`,
               }}
@@ -166,9 +186,9 @@ export function Calendar(p: Props) {
                 )}
               </div>
 
-              {/* Items summary */}
+              {/* Items summary — week scale has room to skip the truncation */}
               <div className="mt-2 space-y-1">
-                {tests.slice(0, 1).map((t) => {
+                {tests.slice(0, isWeek ? undefined : 1).map((t) => {
                   const cls = classById[t.classId];
                   return (
                     <div key={t.id} className="flex items-center gap-1.5 text-[11px] font-semibold truncate"
@@ -178,7 +198,7 @@ export function Calendar(p: Props) {
                     </div>
                   );
                 })}
-                {openAsg.slice(0, tests.length > 0 ? 1 : 2).map((a) => {
+                {openAsg.slice(0, isWeek ? undefined : (tests.length > 0 ? 1 : 2)).map((a) => {
                   const cls = classById[a.classId];
                   const tint = cls?.tint ?? 0;
                   return (
@@ -196,13 +216,13 @@ export function Calendar(p: Props) {
                     </div>
                   );
                 })}
-                {studies.length > 0 && (openAsg.length + tests.length) < 3 && (
+                {studies.length > 0 && (isWeek || (openAsg.length + tests.length) < 3) && (
                   <div className="flex items-center gap-1.5 text-[10px] truncate" style={{ color: "hsl(var(--ink-3))" }}>
                     <IconBook className="w-3 h-3 shrink-0" />
                     <span className="truncate">study · {studies.length}</span>
                   </div>
                 )}
-                {(openAsg.length + tests.length + studies.length) > 3 && (
+                {!isWeek && (openAsg.length + tests.length + studies.length) > 3 && (
                   <div className="text-[10px]" style={{ color: "hsl(var(--ink-3))" }}>
                     +{openAsg.length + tests.length + studies.length - 3} more
                   </div>
